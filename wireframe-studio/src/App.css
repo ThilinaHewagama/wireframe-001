@@ -1,0 +1,73 @@
+/* General Resets and App Container */
+body, html, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: #f4f7f9; /* Light overall background */
+  color: #333;
+}
+
+.App {
+  display: flex;
+  height: 100vh; /* Full viewport height */
+  overflow: hidden; /* Prevent body scrollbars */
+}
+
+/* Pane Styling */
+.pane {
+  height: 100%;
+  box-sizing: border-box;
+  display: flex; /* Use flex for children management */
+  flex-direction: column; /* Stack children vertically */
+  overflow: hidden; /* Children will handle their own scrolling */
+}
+
+.editor-pane {
+  flex-basis: 50%;
+  background-color: #282c34; /* Darker background for editor */
+  color: #abb2bf; /* Light text for dark background */
+  border-right: 2px solid #4a4f58; /* Clearer separator */
+}
+
+/* Ensure CodeMirror editor itself fills the space above error display */
+.editor-pane > div:first-child { /* Targets the CodeMirror wrapper */
+  flex-grow: 1;
+  height: calc(100% - 100px); /* Default height, assuming error display is max 100px */
+  overflow-y: auto;
+}
+/* If the error display is dynamic, this height might need JS adjustment or more complex CSS */
+
+
+.renderer-pane {
+  flex-basis: 50%;
+  background-color: #ffffff; /* White for renderer area */
+  padding: 0; /* Remove padding, children will manage */
+}
+
+/* Error Display in Editor Pane */
+.editor-pane .error-display {
+  padding: 10px 15px;
+  background-color: #3a3f47; /* Slightly lighter than editor bg */
+  border-top: 1px solid #4a4f58;
+  max-height: 150px; /* Limit height of error console */
+  overflow-y: auto;
+  color: #e06c75; /* Reddish error text */
+  font-size: 0.85em;
+  flex-shrink: 0; /* Prevent error display from shrinking */
+}
+
+.editor-pane .error-display h3 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 1em;
+  color: #e06c75;
+  border-bottom: 1px solid #4a4f58;
+  padding-bottom: 5px;
+}
+
+.editor-pane .error-display p {
+  margin: 4px 0;
+  white-space: pre-wrap; /* Wrap error messages */
+}

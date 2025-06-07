@@ -1,0 +1,56 @@
+.screen-switcher {
+  padding: 12px 20px;
+  background-color: #e9ecef;
+  border-bottom: 1px solid #ced4da;
+  flex-shrink: 0; /* Prevent switcher from shrinking */
+}
+
+.screen-switcher h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 0.9em;
+  color: #495057;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.screen-switcher ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.screen-switcher button {
+  padding: 8px 15px; /* Slightly larger buttons */
+  border: 1px solid #adb5bd;
+  background-color: #f8f9fa; /* Lighter background */
+  color: #007bff;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.9em;
+  font-weight: 500;
+  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+
+.screen-switcher button:hover {
+  background-color: #dde6ed; /* Slightly darker hover */
+  border-color: #007bff;
+}
+
+.screen-switcher button.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+  font-weight: bold;
+}
+
+.screen-switcher-placeholder {
+  padding: 12px 20px;
+  text-align: left; /* Align with other content if needed */
+  color: #6c757d;
+  font-style: italic;
+  font-size: 0.9em;
+}

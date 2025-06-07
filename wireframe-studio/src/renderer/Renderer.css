@@ -1,0 +1,111 @@
+.wireframe-screen {
+  padding: 20px;
+  background-color: #f0f2f5; /* Neutral background for the content area */
+  height: 100%;
+  box-sizing: border-box;
+  overflow-y: auto; /* Allow scrolling for content */
+  flex-grow: 1; /* Make it fill space below switcher */
+}
+
+.wireframe-screen h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #d9dde0;
+  padding-bottom: 10px;
+  text-align: center;
+  color: #333;
+  font-size: 1.4em;
+  font-weight: 600;
+}
+
+.components-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* Increased spacing between components */
+}
+
+/* Base style for all wireframe components */
+.wireframe-label,
+.wireframe-input,
+.wireframe-button,
+.wireframe-image,
+.wireframe-image-error {
+  border: 2px dashed #adb5bd; /* Dashed border for wireframe look */
+  background-color: #ffffff;
+  box-sizing: border-box;
+  width: 100%;
+  text-align: left; /* Default text align */
+}
+
+.wireframe-label {
+  padding: 12px 15px;
+  font-size: 1em;
+  color: #212529;
+  line-height: 1.5;
+}
+
+.wireframe-input {
+  padding: 12px 15px;
+  font-size: 1em;
+  color: #495057;
+  /* 'value' attribute will be empty for placeholder to show */
+}
+.wireframe-input::placeholder {
+  color: #6c757d;
+}
+
+
+.wireframe-button {
+  padding: 12px 15px;
+  font-size: 1em;
+  color: #333; /* Darker text for buttons */
+  background-color: #e9ecef; /* Light grey, common for wireframe buttons */
+  text-align: center;
+  cursor: default; /* Not interactive */
+  border-style: solid; /* Solid border for buttons to differentiate */
+  border-color: #ced4da;
+}
+
+.wireframe-image {
+  padding: 0; /* No padding for image container itself */
+  display: flex; /* For centering placeholder text if src is invalid/missing */
+  justify-content: center;
+  align-items: center;
+  min-height: 80px; /* Minimum height for image areas */
+  background-color: #e9ecef; /* Placeholder background */
+}
+
+.wireframe-image img { /* Style for the actual <img> tag */
+  max-width: 100%;
+  max-height: 300px; /* Max height for very tall images */
+  height: auto;
+  display: block;
+  border: none; /* Remove border from img if container has it */
+}
+
+.wireframe-image-error,
+.wireframe-image:not(:has(img[src]))::before { /* Show placeholder text if no valid image */
+  content: 'Image (' attr(data-src) ')'; /* Show src in placeholder */
+  color: #6c757d;
+  font-style: italic;
+  display: block; /* Ensure it's visible */
+  text-align: center;
+  width: 100%;
+  padding: 20px;
+}
+.wireframe-image:has(img[src]) { /* If image has valid src, don't show placeholder text */
+    border-style: solid; /* Solid border for actual images */
+}
+
+
+.renderer-placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: #6c757d;
+  font-style: italic;
+  font-size: 1.1em;
+  background-color: #f8f9fa;
+  flex-grow: 1;
+}
