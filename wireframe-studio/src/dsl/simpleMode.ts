@@ -1,8 +1,8 @@
-import { StringStream } from '@codemirror/lang-legacy-modes'; // Corrected import path
+// StringStream import removed
 
 // This is the mode definition object itself, now named simpleMode.
 export const simpleMode = {
-  token: (stream: StringStream) => {
+  token: (stream: any) => { // Changed StringStream to any, or could be more specific if a base type is known
     if (stream.match(/screen|label|input|button|image/)) {
       return 'keyword';
     }
