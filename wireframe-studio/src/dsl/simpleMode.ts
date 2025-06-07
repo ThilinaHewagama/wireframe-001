@@ -1,4 +1,4 @@
-import { StringStream } from '@codemirror/legacy-modes'; // Correct import for legacy modes
+import { StringStream } from '@codemirror/lang-legacy-modes'; // Corrected import path
 
 // This is the mode definition object itself, now named simpleMode.
 export const simpleMode = {
