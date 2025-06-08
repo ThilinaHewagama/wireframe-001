@@ -19,7 +19,7 @@ interface NodePosition {
 
 const MIN_SCALE = 0.2;
 const MAX_SCALE = 3.0;
-const ZOOM_SENSITIVITY = 0.001; // Adjust for more or less sensitive zooming
+const ZOOM_SENSITIVITY = 0.001;
 
 const StoryboardCanvas: React.FC<StoryboardCanvasProps> = ({ screens, links, navigationStacks }) => {
   const [nodePositions, setNodePositions] = useState<Record<string, NodePosition>>({});
@@ -64,13 +64,10 @@ const StoryboardCanvas: React.FC<StoryboardCanvasProps> = ({ screens, links, nav
         }
     }
     if (allNodesRendered && (Object.keys(newPositions).length === screens.length || screens.length === 0) ) {
-        // Update if number of screens changed or if positions differ
         if (JSON.stringify(nodePositions) !== JSON.stringify(newPositions) || screens.length !== Object.keys(nodePositions).length) {
              setNodePositions(newPositions);
         }
     }
-  // Re-run when screens array changes, or scale/translate changes as it might affect layout indirectly
-  // or if nodePositions was empty and is now populated.
   }, [screens, scale, translateX, translateY, nodePositions]);
 
   const [svgDimensions, setSvgDimensions] = useState({ width: 0, height: 0 });
@@ -86,19 +83,13 @@ const StoryboardCanvas: React.FC<StoryboardCanvasProps> = ({ screens, links, nav
     updateSize();
     window.addEventListener('resize', updateSize);
     return () => window.removeEventListener('resize', updateSize);
-  }, [screens, nodePositions, scale]); // Update SVG size when content or scale changes
+  }, [screens, nodePositions, scale]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.button !== 0 || !canvasContainerRef.current) return;
-    // Allow panning only if the direct target is the canvas container or the content div itself,
-    // not the screen nodes or other elements.
-    if (e.target !== canvasContainerRef.current && e.target !== canvasContentRef.current) {
-        // Check if target is an SVG element (like a line) inside canvasContentRef, allow pan
-        if (!(e.target instanceof SVGElement && e.target.parentElement === canvasContentRef.current)) {
-           return;
-        }
+    if (e.target !== canvasContainerRef.current && e.target !== canvasContentRef.current && !(e.target instanceof SVGElement && e.target.parentElement === canvasContentRef.current)) {
+       return;
     }
-
     setIsPanning(true);
     setLastPanPosition({ x: e.clientX, y: e.clientY });
     canvasContainerRef.current.style.cursor = 'grabbing';
@@ -106,7 +97,7 @@ const StoryboardCanvas: React.FC<StoryboardCanvasProps> = ({ screens, links, nav
   }, []);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!isPanning || !canvasContainerRef.current) return;
+    if (!isPanning) return;
     const deltaX = e.clientX - lastPanPosition.x;
     const deltaY = e.clientY - lastPanPosition.y;
     setTranslateX(prev => prev + deltaX);
@@ -124,28 +115,26 @@ const StoryboardCanvas: React.FC<StoryboardCanvasProps> = ({ screens, links, nav
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
-    if (!canvasContainerRef.current || !canvasContentRef.current) return;
+    if (!canvasContainerRef.current) return;
 
     const rect = canvasContainerRef.current.getBoundingClientRect();
-    const mouseXInContainer = e.clientX - rect.left;
-    const mouseYInContainer = e.clientY - rect.top;
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
 
-    const worldXBeforeZoom = (mouseXInContainer - translateX) / scale;
-    const worldYBeforeZoom = (mouseYInContainer - translateY) / scale;
+    const worldX = (mouseX - translateX) / scale;
+    const worldY = (mouseY - translateY) / scale;
 
     const delta = e.deltaY * ZOOM_SENSITIVITY * -1;
-    let newScale = scale * (1 + delta); // Multiplicative scaling for smoother feel
+    let newScale = scale * (1 + delta);
     newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, newScale));
 
-    const newTranslateX = mouseXInContainer - worldXBeforeZoom * newScale;
-    const newTranslateY = mouseYInContainer - worldYBeforeZoom * newScale;
+    const newTranslateX = mouseX - worldX * newScale;
+    const newTranslateY = mouseY - worldY * newScale;
 
     setScale(newScale);
     setTranslateX(newTranslateX);
     setTranslateY(newTranslateY);
-
   }, [scale, translateX, translateY]);
-
 
   return (
     <div
@@ -156,7 +145,7 @@ const StoryboardCanvas: React.FC<StoryboardCanvasProps> = ({ screens, links, nav
       onMouseUp={handleMouseUpOrLeave}
       onMouseLeave={handleMouseUpOrLeave}
       onWheel={handleWheel}
-      style={{ cursor: 'grab' }}
+      style={{ cursor: isPanning ? 'grabbing' : 'grab' }}
     >
       <div
         className="storyboard-canvas"
@@ -186,8 +175,17 @@ const StoryboardCanvas: React.FC<StoryboardCanvasProps> = ({ screens, links, nav
             height={svgDimensions.height}
           >
             <defs>
-              <marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse" fill="#555">
-                <path d="M 0 0 L 10 5 L 0 10 z" />
+              <marker
+                id="arrowhead"
+                viewBox="-5 -5 10 10"      // Centered viewBox
+                refX="1.5"               // Nudge forward from center of line end to tip of arrow
+                refY="0"                 // Center vertically
+                markerUnits="strokeWidth"// Arrowhead scales with line
+                markerWidth="4"          // Viewport size for the marker (adjusts apparent size)
+                markerHeight="4"         // Viewport size for the marker
+                orient="auto-start-reverse" // Orients arrowhead along the line
+              >
+                <path d="M -2 -4 L 3 0 L -2 4 Z" fill="#555" /> {/* Adjusted path for new viewBox and desired shape */}
               </marker>
             </defs>
             {links.map((link, index) => {
@@ -205,15 +203,24 @@ const StoryboardCanvas: React.FC<StoryboardCanvasProps> = ({ screens, links, nav
                 const dist = Math.sqrt(dx*dx + dy*dy);
                 if (dist === 0) return null;
 
-                // Adjust end point for arrowhead (approximate)
-                // Arrowhead size in marker def is 6x8, refX=8.
-                // Effective arrow length for offset calculation can be around 10-15px at scale=1
-                const arrowVisualLength = 10;
-                const ratio = (dist - arrowVisualLength) / dist;
+                // Approximate visual length of the arrowhead based on strokeWidth and markerWidth
+                // markerWidth="4" and strokeWidth={1.5/scale} -> visual size = 4 * (1.5/scale) = 6/scale
+                // Add a little extra for spacing.
+                const visualArrowheadLength = (4 * (1.5 / scale)) + (3 / scale) ; // Approx 6 + 3 = 9 pixels at scale 1
 
-                const targetX = (ratio > 0) ? (x1 + dx * ratio) : x1; // If nodes are too close, line ends at source center
-                const targetY = (ratio > 0) ? (y1 + dy * ratio) : y1;
+                let targetX = x2;
+                let targetY = y2;
 
+                if (dist > visualArrowheadLength) {
+                    const ratio = (dist - visualArrowheadLength) / dist;
+                    targetX = x1 + dx * ratio;
+                    targetY = y1 + dy * ratio;
+                } else {
+                    // If nodes are too close, line might be very short or zero length after offset.
+                    // Set target to almost same as source to make line tiny or effectively invisible.
+                    targetX = x1 + dx * 0.01;
+                    targetY = y1 + dy * 0.01;
+                }
 
                 return (
                   <line

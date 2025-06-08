@@ -94,12 +94,7 @@ function App() {
             ))}
           </div>
         )}
-        <div className="debug-output" style={{padding: '10px', fontSize: '0.8em', maxHeight: '100px', overflowY: 'auto', borderTop: '1px solid #444', color: '#ccc'}}>
-          <h4 style={{marginTop: '0', marginBottom: '5px', color: '#aaa'}}>Parsed Navigation:</h4>
-          <pre style={{whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: '#ddd'}}>{JSON.stringify(navigationStacks, null, 2)}</pre>
-          <h4 style={{marginTop: '10px', marginBottom: '5px', color: '#aaa'}}>Parsed Links:</h4>
-          <pre style={{whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: '#ddd'}}>{JSON.stringify(links, null, 2)}</pre>
-        </div>
+        {/* Debug output removed */}
       </div>
 
       <div className="pane renderer-pane">
