@@ -1,86 +1,107 @@
-// simpleMode.ts for CodeMirror's StreamLanguage
+import { StringStream, StreamParser } from '@codemirror/language';
 
-// Base keywords for screen and components (already defined)
-const baseComponentKeywords = ["label", "input", "button", "image"];
-const screenKeyword = "screen";
+// Define the state for our simple mode
+interface DslModeState {
+  // True if the next token is expected to be a screen name after 'screen' keyword
+  inScreenNameContext: boolean;
+  // Potentially add more state flags if mode becomes more complex, e.g., for nested blocks
+  // currentIndent: number; // If we were to manage complex indentation states
+}
 
-// New keywords for stacks and navigation
-const stackKeywords = ["vertical_stack", "horizontal_stack"];
-const navigationKeywords = ["navigation_stack", "tab_stack", "drawer_stack"];
+export const simpleMode: StreamParser<DslModeState> = {
+  startState: (): DslModeState => {
+    return {
+      inScreenNameContext: false,
+      // currentIndent: 0,
+    };
+  },
 
-// All keywords combined for easier regex generation if needed, or individual matching
-// const allKeywords = [screenKeyword, ...baseComponentKeywords, ...stackKeywords, ...navigationKeywords];
+  token: (stream: StringStream, state: DslModeState): string | null => {
+    // Handle comments first (match whole line)
+    if (stream.match(/\/\/.*/, true, true)) return 'comment'; // Consume line, case-insensitive for match
+    if (stream.match(/#.*/, true, true)) return 'comment';   // Consume line, case-insensitive for match
 
-export const simpleMode = { // Renamed from simpleDslMode to match Editor.tsx import
-  start: [
-    // String literal
-    { regex: /"(?:[^"\\]|\\.)*?"/, token: "string" },
+    // Whitespace: skip it. If a line is entirely whitespace, stream.eol() will be true.
+    if (stream.eatSpace()) return null;
 
-    // Comments
-    { regex: /\/\/.*/, token: "comment" },
-    { regex: /#.*/, token: "comment" },
+    // Handle strings (match until closing quote, handling escapes)
+    if (stream.match(/"(?:[^"\\]|\\.)*?"/)) return 'string';
 
-    // Screen definition (keyword 'screen' followed by a name)
-    // Using 'sol: true' to ensure it's at the start of a line (ignoring leading whitespace)
-    { regex: new RegExp(`(?:${screenKeyword})\\b`), token: "keyword", sol: true, next: "screenName" },
+    // Check if we are expecting a screen name
+    if (state.inScreenNameContext) {
+      state.inScreenNameContext = false; // Consume this context
+      if (stream.match(/[a-zA-Z_][\w-]*/)) {
+        return 'variable-3'; // Screen name token
+      }
+      // If not a valid screen name right after 'screen', it's an error or unstyled.
+      // Let other rules attempt to match or return null.
+    }
 
-    // Stack keywords (vertical_stack, horizontal_stack) followed by {
-    // Using 'sol: true' for stacks as they also often start a line of definition or are clearly delimited.
-    { regex: new RegExp(`(?:${stackKeywords.join("|")})\\b\\s*\\{`), token: "keyword", sol: true, indent: true },
-    // Closing brace for stacks
-    { regex: /}\s*$/, token: "keyword", sol: true, dedent: true },
+    // Keywords and Operators
+    // Order can be important here. More specific or longer matches often come first.
 
+    if (stream.match(/->/)) return 'operator';
 
-    // Navigation keywords (navigation_stack, tab_stack, drawer_stack)
-    // These are usually followed by attributes like root=, tabs=[], drawer=
-    // 'def' is often used for definitions or type-like keywords in CodeMirror themes
-    { regex: new RegExp(`(?:${navigationKeywords.join("|")})\\b`), token: "def", sol: true },
-    // Attributes for navigation (root=, tabs=, drawer=)
-    // 'atom' is often used for constants or special values.
-    { regex: /(?:root|tabs|drawer)=/, token: "atom" },
-    // Values within tabs=[] (screen names, can also be general identifiers)
-    // This is a simplified regex; more robust would be to handle brackets and commas in a separate state.
-    { regex: /\[[\w\s,-]*\]/, token: "string-2" }, // Using string-2 for array-like values
+    // Use \b for word boundaries to avoid matching parts of longer words.
+    if (stream.match(/screen\b/)) {
+      state.inScreenNameContext = true;
+      return 'keyword';
+    }
 
+    // Stacks: match "keyword {" or "}"
+    if (stream.match(/(vertical_stack|horizontal_stack)\b\s*{/)) {
+      // state.currentIndent++; // Example if managing indent state for highlighting
+      return 'keyword';
+    }
+    if (stream.match(/}/)) {
+      // state.currentIndent = Math.max(0, state.currentIndent - 1);
+      return 'keyword'; // Closing brace
+    }
 
-    // Base component keywords (label, input, button, image)
-    // 'variable-2' is a common token type for secondary keywords or properties.
-    // These are typically indented, but sol:true is not used here as indentation is semantic, not lexical for highlighting.
-    { regex: new RegExp(`(?:${baseComponentKeywords.join("|")})\\b`), token: "variable-2" },
+    // Navigation keywords
+    if (stream.match(/(navigation_stack|tab_stack|drawer_stack)\b/)) return 'def';
+    // Navigation attributes
+    if (stream.match(/(root=|tabs=|drawer=)/)) return 'atom';
 
-    // Linking operator "->"
-    { regex: /->/, token: "operator" },
+    // Simplified matching for content inside tabs=[...].
+    // This is basic and might not perfectly handle all cases or nested structures within.
+    if (stream.match(/\[\s*([a-zA-Z_][\w-]*(\s*,\s*[a-zA-Z_][\w-]*)*)\s*]/)) {
+        return 'string-2'; // Style for array-like values or list of screen names
+    }
 
-    // Screen names (often after 'screen' or in links/navigation attributes)
-    // This is a general identifier, could also be a property name.
-    // 'variable' is a general token for identifiers.
-    { regex: /[a-zA-Z_][\w-]*/, token: "variable" },
+    // Base component keywords
+    const componentKeywords = ["label", "input", "button", "image"];
+    for (const kw of componentKeywords) {
+      // Match keyword only if it's a whole word
+      if (stream.match(new RegExp(kw + '\\b'))) return 'variable-2';
+    }
 
-    // Numbers (if any DSL parameters were numeric, e.g. for spacing - not in current DSL)
-    // { regex: /\d+/, token: "number" },
+    // General identifiers (e.g., screen names in links, attribute values if not otherwise tokenized)
+    if (stream.match(/[a-zA-Z_][\w-]*/)) return 'variable';
 
-  ],
-  screenName: [
-      // 'variable-3' can be styled differently for emphasis on screen names.
-      { regex: /[a-zA-Z_][\w-]*/, token: "variable-3", next: "start" }, // Screen name token
-      { regex: /.*/, token: "error", next: "start"} // Anything else is an error, go back to start
-  ],
-  // indentation: 2, // This was in a previous version, but StreamLanguage typically doesn't handle it directly.
-  // The parser is responsible for semantic indentation. Highlighting just colors tokens.
+    // If nothing matched, advance the stream by one character to avoid infinite loops
+    // and return null (no specific token type for this character).
+    stream.next();
+    return null;
+  },
+
+  // Optional: Add 'indent' function if you want CodeMirror to auto-indent based on syntax.
+  // This requires importing `IndentContext` and `indentUnit` from `@codemirror/language`.
+  // Example:
+  // indent: (state: DslModeState, textAfter: string, context: IndentContext): number | null => {
+  //   if (textAfter.match(/^\s*}/)) { // Line is '}' or starts with '}' after whitespace
+  //     return context.baseIndent - context.unit; // Dedent
+  //   }
+  //   // Add more sophisticated logic based on state (e.g., if last token was '{')
+  //   // if (state.lastTokenWasOpenBrace) return context.baseIndent + context.unit;
+  //   return null; // Means no change or rely on CodeMirror's default behavior
+  // }
 };
 
-// Exporting dslKeywords might still be useful for other parts of the app, e.g., autocompletion if added later.
+// Exporting dslKeywords might still be useful for other parts of the app
 export const dslKeywords = [
-    screenKeyword,
-    ...baseComponentKeywords,
-    ...stackKeywords,
-    ...navigationKeywords
+    "screen", "label", "input", "button", "image",
+    "vertical_stack", "horizontal_stack",
+    "navigation_stack", "tab_stack", "drawer_stack"
 ];
-// Also operators or special symbols if needed elsewhere
 export const dslOperators = ["->", "{", "}"];
-
-// Ensure the export name matches what Editor.tsx expects: `simpleMode`
-// The provided code already uses `export const simpleDslMode`, if Editor.tsx uses `simpleMode`, this needs to be consistent.
-// The previous step (Enhance Error Handling) changed Editor.tsx to import `simpleMode`.
-// So, the export name here should be `simpleMode`.
-// The provided code block in the prompt uses `export const simpleDslMode`. I'm correcting this to `simpleMode`.

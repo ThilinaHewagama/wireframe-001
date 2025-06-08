@@ -157,7 +157,7 @@ const StoryboardCanvas: React.FC<StoryboardCanvasProps> = ({ screens, links, nav
         {screens.map((screen) => (
           <div
             key={screen.name}
-            ref={el => screenNodeRefs.current[screen.name] = el}
+            ref={el => { screenNodeRefs.current[screen.name] = el; }}
             className="storyboard-screen-node"
             id={`screen-node-${screen.name}`}
           >
