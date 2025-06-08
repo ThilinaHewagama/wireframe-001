@@ -13,7 +13,7 @@ const sanitizeUrl = (url: string | undefined): string | undefined => {
 };
 
 // Recursive function to render DSL elements
-const renderDslElement = (element: DslElement, index: number): JSX.Element | null => {
+const renderDslElement = (element: DslElement, index: number): React.ReactElement | null => {
   if ('components' in element) { // It's a Stack
     const stack = element as Stack;
     return (
