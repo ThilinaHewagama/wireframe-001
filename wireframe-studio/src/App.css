@@ -31,19 +31,27 @@ body, html, #root {
   border-right: 2px solid #4a4f58; /* Clearer separator */
 }
 
-/* Ensure CodeMirror editor itself fills the space above error display */
-.editor-pane > div:first-child { /* Targets the CodeMirror wrapper */
+/* Ensure CodeMirror editor itself fills the space above error display and debug output */
+.editor-pane > .cm-editor { /* Targeting CodeMirror's main editor view class directly */
   flex-grow: 1;
-  height: calc(100% - 100px); /* Default height, assuming error display is max 100px */
+  /* Simple height calculation, might need to be more dynamic if error/debug areas change size significantly */
+  height: calc(100% - 150px - 100px); /* 150px for errors, 100px for debug */
   overflow-y: auto;
 }
-/* If the error display is dynamic, this height might need JS adjustment or more complex CSS */
+.editor-pane > div:not(.cm-editor):not(.error-display):not(.debug-output) {
+    /* This is for the direct child of editor-pane that WRAPS CodeMirror if it's not .cm-editor itself */
+    /* This rule might be too broad or not needed if .cm-editor is a direct child or its wrapper already behaves */
+    flex-grow: 1;
+    overflow-y: auto;
+}
 
 
 .renderer-pane {
   flex-basis: 50%;
   background-color: #ffffff; /* White for renderer area */
   padding: 0; /* Remove padding, children will manage */
+  display: flex; /* Ensure renderer-pane itself is a flex container */
+  flex-direction: column; /* Stack switcher and content vertically */
 }
 
 /* Error Display in Editor Pane */
@@ -70,4 +78,111 @@ body, html, #root {
 .editor-pane .error-display p {
   margin: 4px 0;
   white-space: pre-wrap; /* Wrap error messages */
+}
+
+/* Debug output styling in editor pane */
+.editor-pane .debug-output {
+    padding: 10px 15px;
+    font-size: 0.8em;
+    max-height: 100px; /* Ensure this matches height calc if used */
+    overflow-y: auto;
+    border-top: 1px solid #4a4f58; /* Match error display separator */
+    color: #ccc;
+    background-color: #2c313a; /* Slightly different from editor main bg for distinction */
+    flex-shrink: 0; /* Prevent from shrinking */
+}
+.editor-pane .debug-output h4 {
+    margin-top: 0;
+    margin-bottom: 5px;
+    color: #aaa;
+    font-size: 0.9em;
+}
+.editor-pane .debug-output pre {
+    white-space: pre-wrap;
+    word-break: break-all;
+    color: #ddd;
+    margin-top: 0;
+    margin-bottom: 5px;
+    font-size: 0.95em;
+}
+
+
+/* View Mode Switcher */
+.view-mode-switcher {
+  display: flex;
+  justify-content: center;
+  padding: 10px;
+  background-color: #333; /* Dark background for switcher */
+  border-bottom: 1px solid #4a4f58; /* Matches editor pane separator */
+  flex-shrink: 0; /* Prevent switcher from shrinking */
+}
+
+.view-mode-switcher button {
+  padding: 8px 15px;
+  margin: 0 5px;
+  border: 1px solid #555;
+  background-color: #444;
+  color: #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.view-mode-switcher button:hover {
+  background-color: #555;
+  color: #fff;
+}
+
+.view-mode-switcher button.active {
+  background-color: #007bff; /* Highlight active button */
+  color: white;
+  border-color: #007bff;
+  font-weight: bold;
+}
+
+/* Storyboard Placeholder Styling */
+.storyboard-placeholder {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%; /* Should fill available space */
+  color: #777;
+  background-color: #e0e0e0; /* Match mobile viewport container bg */
+  text-align: center;
+  flex-grow: 1; /* Ensure it takes available space in renderer-pane */
+}
+.storyboard-placeholder h2 {
+    color: #333;
+}
+
+/* Ensure ScreenSwitcher + Renderer or StoryboardPlaceholder correctly fill renderer-pane */
+.renderer-pane > div:not(.view-mode-switcher) {
+    flex-grow: 1; /* The container for (ScreenSwitcher+Renderer) or StoryboardPlaceholder */
+    display: flex; /* If it's the (ScreenSwitcher+Renderer) wrapper, make it flex column */
+    flex-direction: column;
+    overflow: hidden; /* Prevent this intermediate div from scrolling */
+}
+
+/* Specifically for the single screen view's content (ScreenSwitcher + Renderer) */
+/* This assumes ScreenSwitcher and Renderer are wrapped in a React.Fragment or a div */
+/* If they are direct children, then this needs adjustment. App.tsx uses <></> which is a fragment. */
+/* The following might be more effective if targeting the direct children: */
+.renderer-pane > .screen-switcher-and-renderer-wrapper { /* You'd need to add this wrapper in App.tsx */
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+/* Or, style ScreenSwitcher and Renderer (or its container .mobile-viewport-container) directly */
+.renderer-pane > .screen-switcher {
+    flex-shrink: 0;
+}
+.renderer-pane > .mobile-viewport-container { /* This is Renderer's top-level div */
+    flex-grow: 1;
+    overflow: auto; /* Allow viewport to scroll if content overflows, though its frame is fixed */
+}
+.renderer-pane > .storyboard-placeholder { /* Already handled: flex-grow: 1; */
+    /* flex-grow: 1; */
 }

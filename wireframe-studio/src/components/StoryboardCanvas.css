@@ -1,0 +1,106 @@
+.storyboard-canvas-container {
+  width: 100%;
+  height: 100%; /* Fill the available space in the renderer pane */
+  background-color: #f0f0f0; /* Light grey background for the canvas area */
+  overflow: hidden; /* Crucial: content outside container is clipped for panning */
+  position: relative; /* For positioning elements like a mini-map or controls later */
+  display: flex; /* Ensure it fills space correctly */
+  flex-grow: 1;
+  /* cursor: grab; */ /* Default cursor is now set by inline style in component */
+}
+
+.storyboard-canvas {
+  /* width: 100%; */ /* No longer 100% if we want infinite canvas feel, content dictates size */
+  /* min-height: 100%; */
+  /* display: inline-block; */ /* Allow canvas to size to its content for panning */
+  position: relative; /* Children (screens, links) can be positioned absolutely if needed */
+  padding: 20px; /* Initial padding around content, effectively part of the pannable area */
+  box-sizing: border-box;
+  color: #333;
+  transform-origin: 0 0; /* Or 'top left'. Crucial for scale and translate. */
+  will-change: transform; /* Performance hint for the browser */
+
+  /* Layout for screen nodes within the main storyboard-canvas */
+  display: flex;
+  flex-wrap: wrap; /* Allow screens to wrap to the next line */
+  justify-content: flex-start; /* Align items to the start (or center if preferred) */
+  align-items: flex-start; /* Align items to the top */
+  align-content: flex-start; /* Align content lines to the top */
+  gap: 20px; /* Gap between screen nodes */
+  text-align: left; /* Reset from previous possible center align */
+}
+
+/* Remove generic p styling if it conflicts */
+.storyboard-canvas > p { /* Only target direct p children if they were for old placeholder */
+  display: none;
+}
+
+/* Styling for individual screen nodes on the storyboard */
+.storyboard-screen-node {
+  width: 150px; /* Fixed width for screen representation */
+  height: 280px; /* Fixed height, approximating a scaled mobile aspect ratio */
+  background-color: #ffffff;
+  border: 1px solid #cccccc;
+  border-radius: 8px;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  overflow: hidden; /* Clip content if it overflows node boundaries */
+  position: relative;
+  z-index: 2;
+}
+
+.storyboard-screen-node:hover {
+  transform: translateY(-3px);
+  box-shadow: 3px 5px 12px rgba(0, 0, 0, 0.15);
+}
+
+.screen-node-title {
+  font-weight: bold;
+  font-size: 0.9em;
+  color: #333;
+  padding-bottom: 5px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #eee;
+  width: 100%;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.screen-node-content-placeholder {
+  font-size: 0.8em;
+  color: #777;
+  text-align: center;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%; /* Ensure it takes width for centering */
+}
+
+.storyboard-empty-placeholder {
+    width: 100%;
+    text-align: center;
+    padding: 50px;
+    color: #888;
+}
+.storyboard-empty-placeholder p {
+    font-size: 1.1em;
+    line-height: 1.6;
+    margin-bottom: 10px; /* Added for spacing between paragraphs */
+}
+
+/* SVG layer for drawing links */
+.storyboard-links-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 1;
+}

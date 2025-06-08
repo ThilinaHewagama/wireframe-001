@@ -1,31 +1,50 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import Editor from './components/Editor';
-import ScreenSwitcher from './components/ScreenSwitcher'; // Import ScreenSwitcher
-import { parseDsl, ParseResult, Screen as DslScreen, NavigationConfig, ScreenLink } from './dsl/parser';
+import ScreenSwitcher from './components/ScreenSwitcher';
+import { parseDsl, ParseResult, Screen as DslScreen, NavigationConfig, ScreenLink, ParseError } from './dsl/parser';
 import Renderer from './renderer/Renderer';
+import StoryboardCanvas from './components/StoryboardCanvas'; // Actual import
+
+// Define view modes
+type ViewMode = 'singleScreen' | 'storyboard';
+
+const initialCode = `navigation_stack root=Welcome
+
+screen Welcome
+  vertical_stack {
+    label "Welcome to Advanced Wireframe Studio!"
+    input placeholder="Enter your name"
+    horizontal_stack {
+      button "Sign Up"
+      button "Login"
+    }
+  }
+
+screen Dashboard
+  vertical_stack {
+    label "User Dashboard"
+    image src="dashboard-graph.png"
+    button "View Stats"
+  }
+
+screen Settings
+  label "App Settings"
+
+Welcome -> Dashboard
+Dashboard -> Settings
+`;
 
 function App() {
-  const initialCode = `screen HomeScreen
-  label "Welcome to Wireframe Studio!"
-  input placeholder="Enter your name"
-  button "Get Started"
-  image src="https://via.placeholder.com/300x100.png?text=Sample+Image"
-
-screen ProfileScreen
-  image src="profile.jpg"
-  label "User Profile"
-  input placeholder="Username"
-  button "Save Changes"
-
-screen SettingsScreen
-  label "App Settings"
-  input placeholder="API Key"
-  button "Update Settings"`;
-
   const [dslCode, setDslCode] = useState<string>(initialCode);
-  const [parseOutput, setParseOutput] = useState<ParseResult>({ screens: [], navigationStacks: [], links: [], errors: [] });
+  const [parseOutput, setParseOutput] = useState<ParseResult>({
+    screens: [],
+    navigationStacks: [] as NavigationConfig[],
+    links: [] as ScreenLink[],
+    errors: [] as ParseError[],
+  });
   const [activeScreen, setActiveScreen] = useState<DslScreen | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('singleScreen'); // New state for view mode
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -33,7 +52,6 @@ screen SettingsScreen
       setParseOutput(result);
 
       if (result.screens.length > 0) {
-        // If current active screen is still valid, keep it. Otherwise, default to first.
         const currentActiveStillExists = result.screens.find(s => s.name === activeScreen?.name);
         if (currentActiveStillExists) {
           setActiveScreen(currentActiveStillExists);
@@ -48,7 +66,7 @@ screen SettingsScreen
     return () => {
       clearTimeout(handler);
     };
-  }, [dslCode, activeScreen?.name]); // Add activeScreen?.name to dependencies to re-evaluate if it changes externally
+  }, [dslCode, activeScreen?.name]);
 
   const handleEditorChange = (value: string) => {
     setDslCode(value);
@@ -58,15 +76,15 @@ screen SettingsScreen
     const selected = parseOutput.screens.find(s => s.name === screenName);
     if (selected) {
       setActiveScreen(selected);
+      setViewMode('singleScreen'); // Switch to single screen view when a screen is selected from switcher
     }
   };
 
-  const errors = parseOutput.errors; // This line already exists and is correct
+  const { screens, errors, navigationStacks, links } = parseOutput;
 
   return (
     <div className="App">
       <div className="pane editor-pane">
-        {/* Pass the errors prop to the Editor component */}
         <Editor value={dslCode} onChange={handleEditorChange} errors={errors} />
         {errors.length > 0 && (
           <div className="error-display">
@@ -76,14 +94,36 @@ screen SettingsScreen
             ))}
           </div>
         )}
+        <div className="debug-output" style={{padding: '10px', fontSize: '0.8em', maxHeight: '100px', overflowY: 'auto', borderTop: '1px solid #444', color: '#ccc'}}>
+          <h4 style={{marginTop: '0', marginBottom: '5px', color: '#aaa'}}>Parsed Navigation:</h4>
+          <pre style={{whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: '#ddd'}}>{JSON.stringify(navigationStacks, null, 2)}</pre>
+          <h4 style={{marginTop: '10px', marginBottom: '5px', color: '#aaa'}}>Parsed Links:</h4>
+          <pre style={{whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: '#ddd'}}>{JSON.stringify(links, null, 2)}</pre>
+        </div>
       </div>
+
       <div className="pane renderer-pane">
-        <ScreenSwitcher
-          screens={parseOutput.screens}
-          activeScreenName={activeScreen?.name || null}
-          onScreenSelect={handleScreenSelect}
-        />
-        <Renderer screen={activeScreen} />
+        <div className="view-mode-switcher">
+          <button onClick={() => setViewMode('singleScreen')} className={viewMode === 'singleScreen' ? 'active' : ''}>
+            Single Screen
+          </button>
+          <button onClick={() => setViewMode('storyboard')} className={viewMode === 'storyboard' ? 'active' : ''}>
+            Storyboard
+          </button>
+        </div>
+
+        {viewMode === 'singleScreen' ? (
+          <>
+            <ScreenSwitcher
+              screens={screens}
+              activeScreenName={activeScreen?.name || null}
+              onScreenSelect={handleScreenSelect}
+            />
+            <Renderer screen={activeScreen} />
+          </>
+        ) : (
+          <StoryboardCanvas screens={screens} links={links} navigationStacks={navigationStacks} />
+        )}
       </div>
     </div>
   );
