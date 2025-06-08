@@ -1,111 +1,206 @@
-.wireframe-screen {
-  padding: 20px;
-  background-color: #f0f2f5; /* Neutral background for the content area */
-  height: 100%;
+/* Renderer.css */
+
+/* Container for the mobile viewport, centers the phone frame */
+.mobile-viewport-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px; /* Padding around the phone */
+  background-color: #e0e0e0; /* Neutral background for the renderer pane */
+  height: 100%; /* Fill the renderer-pane */
   box-sizing: border-box;
-  overflow-y: auto; /* Allow scrolling for content */
-  flex-grow: 1; /* Make it fill space below switcher */
+  overflow: auto; /* In case phone frame is too big for small windows, though it's fixed size */
 }
 
-.wireframe-screen h3 {
+/* The mobile phone frame itself */
+.mobile-frame {
+  width: 375px;
+  height: 812px; /* iPhone X/XS/11 Pro height */
+  background-color: #1c1c1e; /* Dark grey, common for phone body */
+  border-radius: 40px; /* Rounded corners for the phone */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2), 0 0 0 8px #111; /* Shadow and thicker border */
+  padding: 18px; /* "Bezel" area */
+  box-sizing: border-box;
+  display: flex; /* To help position screen content if needed */
+  flex-direction: column; /* Stack notch + screen */
+  overflow: hidden; /* Clip content like notch */
+}
+
+/* Optional: Mobile notch (purely visual) */
+/*
+.mobile-notch {
+  width: 180px;
+  height: 28px;
+  background-color: #111; // Matches border/shadow
+  border-radius: 0 0 15px 15px;
+  align-self: center;
+  margin-bottom: 10px; // Space between notch and screen content
+}
+*/
+
+/* The actual screen content area, inside the mobile frame */
+.wireframe-screen {
+  background-color: #f0f2f5; /* Screen background, was #f0f2f5 */
+  height: 100%; /* Fill the available space within mobile-frame padding */
+  width: 100%;
+  overflow-y: auto; /* Allow scrolling for screen content */
+  border-radius: 22px; /* Inner screen rounded corners */
+  box-sizing: border-box;
+  padding: 15px; /* Padding inside the screen, before components start */
+}
+
+/* Placeholder styling if no screen is selected, now within the frame */
+.mobile-frame.renderer-placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #888; /* Lighter text on dark phone body */
+  font-style: italic;
+  font-size: 1.1em;
+  text-align: center;
+  background-color: #333; /* Darker background for placeholder screen */
+  border-radius: 22px; /* Match screen radius */
+}
+
+
+/* Component stack and individual component styles from previous version */
+/* These might need minor adjustments if padding/margins conflict with new frame */
+
+.wireframe-screen h3 { /* If screen name header is used inside .wireframe-screen */
   margin-top: 0;
-  margin-bottom: 20px;
-  border-bottom: 2px solid #d9dde0;
-  padding-bottom: 10px;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #d9dde0;
+  padding-bottom: 8px;
   text-align: center;
   color: #333;
-  font-size: 1.4em;
+  font-size: 1.2em;
   font-weight: 600;
 }
 
-.components-stack {
+.components-stack { /* This is the root container for elements on a screen */
   display: flex;
-  flex-direction: column;
-  gap: 15px; /* Increased spacing between components */
+  flex-direction: column; /* Default screen layout is vertical */
+  gap: 12px; /* Spacing between root elements on a screen */
 }
 
 /* Base style for all wireframe components */
 .wireframe-label,
 .wireframe-input,
 .wireframe-button,
-.wireframe-image,
+.wireframe-image, /* This is the container for the image */
 .wireframe-image-error {
-  border: 2px dashed #adb5bd; /* Dashed border for wireframe look */
+  border: 2px dashed #adb5bd;
   background-color: #ffffff;
   box-sizing: border-box;
-  width: 100%;
-  text-align: left; /* Default text align */
+  width: 100%; /* Default to full width within their parent */
+  text-align: left;
+  border-radius: 4px; /* Slight rounding for components */
 }
 
+/* Base style for stack containers */
+.wireframe-stack {
+  border: 2px dotted #777; /* Differentiate stacks visually */
+  background-color: rgba(0,0,0,0.02); /* Slight background to see stack area */
+  box-sizing: border-box;
+  width: 100%; /* Stacks also take full width of their parent by default */
+  padding: 8px; /* Padding inside the stack, before its children */
+  border-radius: 4px;
+}
+/* Remove placeholder text style for p inside stack if it was from previous step */
+.wireframe-stack > p:first-child[style*="font-style: italic"] {
+  display: none; /* Hide the "stack placeholder" text if actual children are rendered */
+}
+.wireframe-stack:empty > p:first-child[style*="font-style: italic"] {
+  display: block; /* Show placeholder text if stack is empty and has the placeholder p */
+}
+
+
 .wireframe-label {
-  padding: 12px 15px;
-  font-size: 1em;
+  padding: 10px 12px;
+  font-size: 0.95em;
   color: #212529;
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
 .wireframe-input {
-  padding: 12px 15px;
-  font-size: 1em;
+  padding: 10px 12px;
+  font-size: 0.95em;
   color: #495057;
-  /* 'value' attribute will be empty for placeholder to show */
 }
 .wireframe-input::placeholder {
   color: #6c757d;
 }
 
-
 .wireframe-button {
-  padding: 12px 15px;
-  font-size: 1em;
-  color: #333; /* Darker text for buttons */
-  background-color: #e9ecef; /* Light grey, common for wireframe buttons */
+  padding: 10px 12px;
+  font-size: 0.95em;
+  color: #333;
+  background-color: #e9ecef;
   text-align: center;
-  cursor: default; /* Not interactive */
-  border-style: solid; /* Solid border for buttons to differentiate */
+  cursor: default;
+  border-style: solid;
   border-color: #ced4da;
 }
 
-.wireframe-image {
-  padding: 0; /* No padding for image container itself */
-  display: flex; /* For centering placeholder text if src is invalid/missing */
-  justify-content: center;
-  align-items: center;
-  min-height: 80px; /* Minimum height for image areas */
-  background-color: #e9ecef; /* Placeholder background */
-}
-
-.wireframe-image img { /* Style for the actual <img> tag */
-  max-width: 100%;
-  max-height: 300px; /* Max height for very tall images */
-  height: auto;
-  display: block;
-  border: none; /* Remove border from img if container has it */
-}
-
-.wireframe-image-error,
-.wireframe-image:not(:has(img[src]))::before { /* Show placeholder text if no valid image */
-  content: 'Image (' attr(data-src) ')'; /* Show src in placeholder */
-  color: #6c757d;
-  font-style: italic;
-  display: block; /* Ensure it's visible */
-  text-align: center;
-  width: 100%;
-  padding: 20px;
-}
-.wireframe-image:has(img[src]) { /* If image has valid src, don't show placeholder text */
-    border-style: solid; /* Solid border for actual images */
-}
-
-
-.renderer-placeholder {
+.wireframe-image { /* Container for the image/placeholder text */
+  padding: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100%;
+  min-height: 60px;
+  background-color: #f8f9fa; /* Light background for image area */
+}
+
+.wireframe-image img { /* The actual <img> tag */
+  max-width: 100%;
+  max-height: 250px;
+  height: auto;
+  display: block;
+  border-radius: 2px; /* Slight rounding if image is smaller than container */
+}
+
+/* Placeholder text using ::before if img is missing or src is invalid */
+.wireframe-image:not(:has(img[src]))::before,
+.wireframe-image:has(img[src=""])::before, /* Handles empty src */
+.wireframe-image:has(img:not([src]))::before { /* Handles img tag without src attribute */
+  content: 'Image (' attr(data-src) ')';
   color: #6c757d;
   font-style: italic;
-  font-size: 1.1em;
-  background-color: #f8f9fa;
-  flex-grow: 1;
+  font-size: 0.9em;
+  display: block;
+  text-align: center;
+  width: 100%;
+  padding: 15px; /* Padding for the placeholder text */
+}
+/* Ensure actual images with valid src don't show the ::before content */
+.wireframe-image:has(img[src]:not([src=""])) {
+    border-style: solid; /* Solid border only for actual images */
+}
+
+.wireframe-image-error { /* If parser flags src as invalid */
+  padding: 15px;
+  color: #dc3545;
+  font-style: italic;
+  font-size: 0.9em;
+  text-align: center;
+}
+
+/* Styles for specific stack types */
+.wireframe-stack.vertical-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* Spacing between items in a vertical stack */
+}
+
+.wireframe-stack.horizontal-stack {
+  display: flex;
+  flex-direction: row;
+  gap: 8px; /* Spacing between items in a horizontal stack */
+  align-items: flex-start; /* Default alignment for items in a row */
+}
+
+/* Child components within a horizontal stack should not take full width by default. */
+.wireframe-stack.horizontal-stack > * { /* Target all direct children */
+  width: auto; /* Override default 100% width from .wireframe-label etc. */
+  flex-shrink: 0;
 }

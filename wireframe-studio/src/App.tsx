@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import Editor from './components/Editor';
 import ScreenSwitcher from './components/ScreenSwitcher'; // Import ScreenSwitcher
-import { parseDsl, ParseResult, Screen as DslScreen } from './dsl/parser';
+import { parseDsl, ParseResult, Screen as DslScreen, NavigationConfig, ScreenLink } from './dsl/parser';
 import Renderer from './renderer/Renderer';
 
 function App() {
@@ -24,7 +24,7 @@ screen SettingsScreen
   button "Update Settings"`;
 
   const [dslCode, setDslCode] = useState<string>(initialCode);
-  const [parseOutput, setParseOutput] = useState<ParseResult>({ screens: [], errors: [] });
+  const [parseOutput, setParseOutput] = useState<ParseResult>({ screens: [], navigationStacks: [], links: [], errors: [] });
   const [activeScreen, setActiveScreen] = useState<DslScreen | null>(null);
 
   useEffect(() => {
